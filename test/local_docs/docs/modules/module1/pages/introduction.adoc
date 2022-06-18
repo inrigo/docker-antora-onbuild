@@ -1,0 +1,9 @@
+= Module 1
+
+.Domain Model
+[plantuml]
+----
+class A
+class B
+A -> B
+----

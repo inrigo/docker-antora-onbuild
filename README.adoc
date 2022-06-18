@@ -1,0 +1,128 @@
+= Antora Generator and HTTP Server (Docker Image)
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+image:https://img.shields.io/docker/v/inrigo/antora-onbuild?label=Docker Hub&sort=semver[latest version at Docker Hub]
+
+Antora documentation generation requires multiple tools to be set up properly.
+Hosting static documentation is either simple or hard depending on the availability of a HTTP server.
+
+This docker image solves both issues by
+
+* generating the documentation during the `docker build`,
+* hosting the generated documentation by `docker run`.
+
+This image is especially useful for enterprise environments where
+
+* highly regulated CI/CD pipelines doesn't allow special software to be installed,
+* static file host is rare but container orchestration like kubernetes are common.
+
+== Usage
+Simply use this image as base image (`FROM`) in your Dockerfile with the standard Antora layout.
+
+[WARNING]
+.ONBUILD
+====
+This images has `ONBUILD` instructions hence the `-onbuild` prefix.
+
+The `ONBUILD` instruction makes commands run during the build of the child image.
+====
+
+.Directory Layout
+----
+📒 repository
+  📄 Dockerfile <.>
+  📄 antora-playbook.yml <.>
+  📂 docs <.>
+    📄 antora.yml
+    📂 modules
+      📂 ROOT
+----
+<.> Dockerfile using this image as base.
+<.> Standard `antora-playbook.yml` file.
+<.> Standard Antora layout in the `docs` directory. This can be configured in the playbook.
+
+.Dockerfile
+[Dockerfile]
+----
+FROM inrigo/antora-onbuild <.>
+----
+<.> Use this images as base.
+
+The base image's `ONBUILD` will
+
+* copy all files from the context (root of the `Dockerfile`) to the `/antora` directory,
+* run the `antora antora-playbook.yml` command,
+* copy the generated site to the HTTP server's public directory.
+
+The `.dockerignore` file can be used to exclude files from the copy command.
+
+.Command line
+[bash]
+----
+docker build . -t project_docs <.>
+docker run --rm -d -p 9999:80 project_docs <.>
+----
+<.> Generates the documentation and adds it to the image.
+<.> Serves the pre-generated documentation on the host at the `http://localhost:9999` URL.
+
+=== Examples
+Examples can be found in the link:test/[] directory.
+
+* The link:test/local_docs/[local documentation] is the standard usage.
+* The link:test/non_root/[non-root] is a usage when the Docker file must have the `USER <uid>` instruction as per vulnerability requirement.
+* The link:test/base_image/[base image] shows how to use a child of this image as a base. This is usually hard as `ONBUILD` takes effect on the child only.
+
+== Configuration
+The HTTP server will run on the port `80` and it can be exposed to the host by the `-p <desired port>:80` argument.
+
+[WARNING]
+.Extension types
+====
+Please note that asciidoc and antora extensions are different, and they must be configured in their respective sections.
+====
+
+=== Kroki Server (Diagram Generation)
+The image contains a Kroki server running on `http://localhost:8000`,
+and the `asciidoctor-kroki` asciidoc extension installed.
+This can be used to generate diagrams during the `docker build`.
+
+.antora-playbook.yml
+[yml]
+----
+asciidoc:
+  extensions:
+    - asciidoctor-kroki <.>
+  attributes:
+    kroki-server-url: http://localhost:8000 <.>
+    kroki-fetch-diagram: true <.>
+----
+<.> The `asciidoctor-kroki` extension must be enabled.
+<.> The url of the embedded Kroki server.
+<.> This is mandatory as the embedded Kroki server is not exposed.
+
+=== Lunr Antora Extension (Offline Search)
+The image has the `@antora/lunr-extension` antora extension installed.
+
+.antora-playbook.yml
+[yml]
+----
+antora:
+  extensions:
+    - require: "@antora/lunr-extension"
+----
+
+== Known limitations
+* The size of the image is big (~300 MB). This can be reduced by using docker multi-stage build.
+* The Kroki extensions are not installed. Only the basic Kroki functionality is supported.
+* Build, test, and release is done manually.
+
+== Contribution
+The `build.sh`, `test.sh` and `release.sh` help the development.
+
+The test cases are located in the `test/` directory.

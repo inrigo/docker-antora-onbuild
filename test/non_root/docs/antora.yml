@@ -1,0 +1,6 @@
+name: example
+title: Example
+nav:
+  - modules/ROOT/nav.adoc
+  - modules/module1/nav.adoc
+

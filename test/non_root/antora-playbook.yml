@@ -1,0 +1,27 @@
+site:
+  title: Example // Docs
+  url: https://example.com
+  start_page: example:ROOT:index.adoc
+content:
+  sources:
+    - url: ./
+      start_path: docs
+      branches: [v*, main]
+      version: true
+antora:
+  extensions:
+    - require: "@antora/lunr-extension"
+asciidoc:
+  extensions:
+    - asciidoctor-kroki
+  attributes:
+    kroki-server-url: http://localhost:8000
+    kroki-fetch-diagram: true
+output:
+  clean: true
+  destinations:
+    - provider: fs
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true

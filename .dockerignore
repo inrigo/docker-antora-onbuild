@@ -1,0 +1,3 @@
+*
+!script/generate.sh
+!script/docker-entrypoint.sh
