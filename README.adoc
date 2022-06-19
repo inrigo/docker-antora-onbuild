@@ -7,7 +7,7 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
-image:https://img.shields.io/docker/v/inrigo/antora-onbuild?label=Docker Hub&sort=semver[latest version at Docker Hub]
+https://hub.docker.com/r/inrigo/antora-onbuild[image:https://img.shields.io/docker/v/inrigo/antora-onbuild?label=Docker Hub&sort=semver[latest version at Docker Hub]]
 
 Antora documentation generation requires multiple tools to be set up properly.
 Hosting static documentation is either simple or hard depending on the availability of a HTTP server.
